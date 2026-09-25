@@ -53,6 +53,66 @@ button,input,select{font:inherit}
 @media(max-width:1180px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2,.grid3{grid-template-columns:1fr}.filters{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:720px){.shell{padding:14px}.topbar{align-items:flex-start;flex-direction:column}.kpis{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.dropzone{min-height:380px;padding:24px}.dropzone h2{font-size:23px}.donutwrap{grid-template-columns:1fr;justify-items:center}.actions{width:100%}.actions .btn{flex:1}}
 @media(max-width:440px){.kpis,.filters{grid-template-columns:1fr}.brand h1{font-size:19px}.kpi .value{font-size:27px}}
+/* --- Simplified visual proposal --- */
+.visualgrid{display:grid;grid-template-columns:1.05fr 1.35fr;gap:16px;margin-bottom:16px}
+.visualgrid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.compactpanel{padding:18px}
+.compactpanel h3{margin:0;font-size:15px}
+.compactpanel p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.overviewsplit{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.miniCol{background:#fbfcfe;border:1px solid var(--line);border-radius:16px;padding:12px}
+.miniCol h4{margin:0 0 10px;font-size:13px}
+.miniCol.alert h4{color:#8f3434}.miniCol.star h4{color:#2b8a6e}
+.miniList{display:grid;gap:8px}
+.miniPerson{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);background:#fff;border-radius:12px;cursor:pointer}
+.miniPerson:hover{background:#f7fbff;border-color:#d8e6f6}
+.miniPerson .n{font-weight:750;font-size:12px}
+.miniPerson .s{font-size:11px;color:var(--muted);margin-top:3px}
+.miniPerson .v{font-size:16px;font-weight:800;text-align:right}
+.miniPerson .subv{font-size:11px;color:var(--muted);text-align:right}
+.heatwrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#fff}
+.heatnote{margin-top:10px;color:var(--muted);font-size:11px}
+.heatTable{width:100%;min-width:720px;border-collapse:separate;border-spacing:0}
+.heatTable th,.heatTable td{padding:8px 8px;border-bottom:1px solid #eef2f7;border-right:1px solid #eef2f7;font-size:11px;text-align:center;vertical-align:middle}
+.heatTable th:first-child,.heatTable td:first-child{position:sticky;left:0;background:#fff;z-index:1;text-align:left;min-width:190px}
+.heatTable thead th{position:sticky;top:0;background:#f8fafc;z-index:2}
+.heatTable thead th:first-child{z-index:3}
+.heatRowLabel{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer}
+.heatRowLabel b{font-size:12px}.heatRowLabel span{font-size:10px;color:var(--muted)}
+.heatcell{border-radius:10px;font-weight:700;min-width:40px}
+.heatcell.zero{color:#8a95a8;background:#f5f7fa}
+.metricPill{display:inline-flex;align-items:center;justify-content:center;padding:6px 8px;border-radius:10px;font-weight:800;font-size:11px;min-width:58px}
+.metricPill.good{background:#eaf7f2;color:#23614f}.metricPill.mid{background:#eef5fb;color:#2d5f8a}.metricPill.warn{background:#fff5e8;color:#9a6b1d}
+.simpleRank{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.quickCard{padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer}
+.quickCard:hover{background:#f8fbfe;border-color:#dce8f5}
+.quickCard .qn{font-weight:760;font-size:13px}.quickCard .qs{font-size:11px;color:var(--muted);margin-top:3px}.quickCard .qv{font-size:24px;font-weight:820;margin-top:9px}.quickCard .qt{font-size:11px;color:var(--muted)}
+.quickLegend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.legendchip{padding:6px 9px;border-radius:999px;background:#f0f4f9;color:#617088;font-size:11px;font-weight:700}
+.grid3,.decisioncard,.tablecard{display:none}
+@media (max-width:1200px){.visualgrid,.visualgrid2{grid-template-columns:1fr}.simpleRank{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:760px){.overviewsplit{grid-template-columns:1fr}.simpleRank{grid-template-columns:1fr}.heatTable{min-width:620px}}
+
+/* --- Detalle completo por encuestador/a --- */
+.verifierDetail{padding:18px;margin-bottom:16px}
+.verifierDetailHead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.verifierDetailHead h3{margin:0;font-size:15px}.verifierDetailHead p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.detailTools{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.detailTools .field{min-width:210px}
+.verifierGroups{display:grid;gap:10px}
+.verifierGroup{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+.verifierGroup summary{list-style:none;cursor:pointer;padding:13px 14px;display:grid;grid-template-columns:minmax(210px,1.6fr) repeat(4,minmax(70px,.55fr)) auto;gap:10px;align-items:center;background:#fbfcfe}
+.verifierGroup summary::-webkit-details-marker{display:none}
+.verifierGroup[open] summary{border-bottom:1px solid var(--line);background:#f7fafc}
+.vgName{font-weight:780;font-size:13px}.vgSup{font-size:11px;color:var(--muted);margin-top:3px}
+.vgMetric{text-align:right}.vgMetric b{display:block;font-size:14px}.vgMetric span{font-size:10px;color:var(--muted)}
+.vgOpen{font-size:11px;color:var(--blue);font-weight:750;white-space:nowrap}
+.vgTableWrap{overflow:auto;max-height:360px}
+.vgTable{width:100%;min-width:850px;border-collapse:collapse;font-size:11px}
+.vgTable th{position:sticky;top:0;background:#f8fafc;z-index:1;padding:9px 10px;text-align:left;color:#647187;text-transform:uppercase;letter-spacing:.03em;font-size:9px}
+.vgTable td{padding:9px 10px;border-top:1px solid #eef1f5}.vgTable tr:hover td{background:#fbfdff}
+.vgEmpty{padding:18px;color:var(--muted);font-size:12px;text-align:center}
+.detailCount{font-size:11px;color:var(--muted);margin-top:8px}
+@media(max-width:900px){.verifierGroup summary{grid-template-columns:1fr 1fr 1fr}.vgOpen{grid-column:1/-1;text-align:right}}
+
 </style>
 </head>
 <body>
@@ -114,6 +174,41 @@ button,input,select{font:inherit}
         </div>
       </article>
     </section>
+    <section class="visualgrid">
+      <article class="panel compactpanel">
+        <div class="cardhead"><div><h3>Panel visual de gestión</h3><p>Resumen breve para decidir contacto: alertas y destacados en un solo lugar.</p></div><span class="badge" id="visualDecisionRef">—</span></div>
+        <div class="quickLegend" id="visualDecisionSummary"></div>
+        <div class="overviewsplit">
+          <div class="miniCol alert">
+            <h4>⚠ En alerta</h4>
+            <div class="miniList" id="compactAlertList"></div>
+          </div>
+          <div class="miniCol star">
+            <h4>★ Destacados</h4>
+            <div class="miniList" id="compactStarList"></div>
+          </div>
+        </div>
+      </article>
+      <article class="panel compactpanel">
+        <div class="cardhead"><div><h3>Mapa de calor · encuestadores/as</h3><p>Últimas fechas con gestión válida. Más oscuro = más gestiones ese día.</p></div><span class="badge" id="heatVerifierBadge">—</span></div>
+        <div class="heatwrap"><div id="verifierHeatmap"></div></div>
+        <div class="heatnote">Clic en un nombre para filtrar. Se muestran hasta 12 encuestadores/as priorizados por carga visible.</div>
+      </article>
+    </section>
+
+    <section class="visualgrid2">
+      <article class="panel compactpanel">
+        <div class="cardhead"><div><h3>Mapa de calor · comunas</h3><p>Vista territorial simple para detectar dónde se concentra el avance y la pendiente.</p></div><span class="badge" id="heatComunaBadge">—</span></div>
+        <div class="heatwrap"><div id="comunaHeatmap"></div></div>
+        <div class="heatnote">Clic en una comuna para filtrar. Las celdas resumen empresas, gestionadas, pendientes y avance.</div>
+      </article>
+      <article class="panel compactpanel">
+        <div class="cardhead"><div><h3>Supervisión rápida</h3><p>Tarjetas para leer rápido el estado por supervisor/a.</p></div><span class="badge" id="quickSupBadge">—</span></div>
+        <div class="simpleRank" id="quickSupervisorCards"></div>
+        <div class="heatnote">Clic en una tarjeta para filtrar por supervisor/a.</div>
+      </article>
+    </section>
+
 
     <section class="grid3">
       <article class="card panel"><div class="cardhead"><div><h3>Supervisores</h3><p>Avance sobre empresas asignadas</p></div></div><div class="barlist" id="supervisorBars"></div></article>
@@ -169,6 +264,21 @@ button,input,select{font:inherit}
     <section class="panel tablecard">
       <div class="tabletop"><div><b>Detalle de empresas</b><div class="muted" style="font-size:11px;margin-top:4px">Solo se muestran campos autorizados. No se procesa RUT, razón social, teléfonos ni correos.</div></div><div class="field" style="min-width:250px"><input id="companySearch" placeholder="Buscar folio, sector o encuestador…"></div></div>
       <div class="tablescroll"><table><thead><tr><th>Folio</th><th>Sector</th><th>Comuna</th><th>Encuestador/a</th><th>Supervisor/a</th><th>Modalidad</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="companyBody"></tbody></table></div>
+    </section>
+
+    <section class="panel verifierDetail">
+      <div class="verifierDetailHead">
+        <div>
+          <h3>Detalle completo por encuestador/a</h3>
+          <p>Abre cada encuestador/a para revisar todas sus empresas visibles. Se mantienen solo campos autorizados.</p>
+          <div class="detailCount" id="detailCount">—</div>
+        </div>
+        <div class="detailTools">
+          <div class="field"><label>Buscar</label><input id="detailSearch" placeholder="Folio, sector o comuna…"></div>
+          <div class="field"><label>Estado</label><select id="detailStatus"><option value="">Todos</option><option value="Gestionada">Gestionada</option><option value="Pendiente">Pendiente</option><option value="Sin asignar">Sin asignar</option><option value="Revisar">Revisar</option></select></div>
+        </div>
+      </div>
+      <div class="verifierGroups" id="verifierDetailGroups"></div>
     </section>
   </main>
   <div class="footer">Dashboard local ENADEL 2026 · La información cargada vive únicamente en la memoria de esta pestaña del navegador.</div>
@@ -667,6 +777,160 @@ $('#loadBtn').addEventListener('click',chooseFile); $('#welcomeLoad').addEventLi
 $('#clearBtn').addEventListener('click',()=>{state.rows=[];$('#dashboard').classList.add('hidden');$('#welcome').classList.remove('hidden');$('#clearBtn').classList.add('hidden');document.querySelector('#welcome .errorbox')?.remove();});
 const dz=$('#welcome'); ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag')})); ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag')})); dz.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
 window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>{if(!dz.contains(e.target))e.preventDefault()});
+// ------------------------------
+// Simplified visual proposal
+// ------------------------------
+function heatBg(value,max, mode='blue'){
+  if(!(value>0) || !(max>0)) return '#f5f7fa';
+  const t=Math.max(0,Math.min(1,value/max));
+  if(mode==='green') return 'rgba(43,138,110,'+(0.10 + t*0.55).toFixed(3)+')';
+  if(mode==='amber') return 'rgba(216,148,44,'+(0.10 + t*0.55).toFixed(3)+')';
+  return 'rgba(45,110,168,'+(0.10 + t*0.55).toFixed(3)+')';
+}
+function heatText(value,max){ return (value>0 && max>0 && value/max>.5)?'#fff':'#24405e'; }
+function getDecisionData(rows){
+  const {stats,refDate}=decisionStats(rows);
+  const days=Number($('#alertDays')?.value||4), lowPct=Number($('#alertProgress')?.value||20), minAssigned=Number($('#alertMinAssigned')?.value||10);
+  const alerts=[];
+  for(const x of stats){
+    if(x.assigned<minAssigned) continue;
+    const reasons=[];
+    if(x.managed===0){reasons.push('0 gestiones');}
+    if(x.daysIdle!==null && x.daysIdle>=days && x.daysIdle<999){reasons.push(x.daysIdle+' días sin gestión');}
+    if(x.daysIdle===999){reasons.push('Sin gestión registrada');}
+    if(x.managed>0 && x.progress<=lowPct && x.recent===0){reasons.push(fmtPct(x.progress)+' de avance');}
+    if(reasons.length){alerts.push({...x,reasons,priority:(x.managed===0 || x.daysIdle>=7)?'Alta':'Media'});}
+  }
+  alerts.sort((a,b)=>b.progress-a.progress || b.managed-a.managed || b.recent-a.recent || a.name.localeCompare(b.name,'es'));
+  const eligible=stats.filter(x=>x.assigned>=minAssigned && x.managed>0);
+  const p75Progress=percentile(eligible.map(x=>x.progress),.75), p75Managed=percentile(eligible.map(x=>x.managed),.75), p75Recent=percentile(eligible.map(x=>x.recent),.75);
+  const alertNames=new Set(alerts.map(x=>x.name));
+  const stars=[];
+  for(const x of eligible){
+    if(alertNames.has(x.name)) continue;
+    const reasons=[]; let score=0;
+    if(x.progress>=p75Progress && p75Progress>0){reasons.push(fmtPct(x.progress)+' avance');score+=2;}
+    if(x.managed>=p75Managed && p75Managed>0){reasons.push(fmtInt(x.managed)+' gestiones');score+=2;}
+    if(x.recent>=Math.max(1,p75Recent)){reasons.push(fmtInt(x.recent)+' en 7 días');score+=2;}
+    if(x.daysIdle===0){reasons.push('actividad reciente');score+=1;}
+    if(score>=3) stars.push({...x,reasons});
+  }
+  stars.sort((a,b)=>b.progress-a.progress || b.managed-a.managed || b.recent-a.recent || a.name.localeCompare(b.name,'es'));
+  return {alerts,stars,refDate,days,lowPct,minAssigned};
+}
+function renderCompactDecision(rows){
+  const {alerts,stars,refDate,days,lowPct,minAssigned}=getDecisionData(rows);
+  const makeItem=(x)=>`<div class="miniPerson" data-mini-verifier="${escapeHTML(x.name)}"><div><div class="n">${escapeHTML(x.name)}</div><div class="s">${escapeHTML(x.supervisor||'Sin supervisor')} · ${fmtInt(x.assigned)} asignadas · ${x.reasons.slice(0,2).join(' · ')}</div></div><div><div class="v">${fmtPct(x.progress)}</div><div class="subv">${fmtInt(x.managed)} gest.</div></div></div>`;
+  $('#visualDecisionRef').textContent=refDate?('Referencia: '+displayDate(refDate)):'Sin referencia';
+  $('#visualDecisionSummary').innerHTML=`<span class="legendchip">${fmtInt(alerts.length)} alertas</span><span class="legendchip">${fmtInt(stars.length)} destacados</span><span class="legendchip">Reglas: ≥${days} días · ≤${lowPct}% · mín ${minAssigned} asignadas</span>`;
+  $('#compactAlertList').innerHTML=alerts.length?alerts.slice(0,6).map(x=>makeItem(x)).join(''):'<div class="muted" style="font-size:12px">Sin alertas con los filtros actuales.</div>';
+  $('#compactStarList').innerHTML=stars.length?stars.slice(0,6).map(x=>makeItem(x)).join(''):'<div class="muted" style="font-size:12px">Sin destacados con los filtros actuales.</div>';
+  document.querySelectorAll('[data-mini-verifier]').forEach(el=>el.addEventListener('click',()=>setDashboardFilter('fEncuestador',el.dataset.miniVerifier)));
+}
+function renderVerifierHeatmap(rows){
+  const box=$('#verifierHeatmap');
+  const dates=[...new Set(rows.filter(r=>r.managed).map(r=>isoDate(r.date)))].sort();
+  const viewDates=dates.slice(-10);
+  const stats=verifierStats(rows).sort((a,b)=>b.assigned-a.assigned || b.managed-a.managed || a.name.localeCompare(b.name,'es')).slice(0,12);
+  $('#heatVerifierBadge').textContent=stats.length?`${fmtInt(stats.length)} encuestadores/as`:'Sin datos';
+  if(!stats.length || !viewDates.length){ box.innerHTML='<div class="muted" style="padding:14px">Sin datos suficientes para construir el mapa de calor.</div>'; return; }
+  let max=0; const countMap=new Map();
+  for(const x of stats){
+    for(const d of viewDates){
+      const c=rows.filter(r=>r.verifier===x.name && r.managed && isoDate(r.date)===d).length;
+      countMap.set(x.name+'|'+d,c); max=Math.max(max,c);
+    }
+  }
+  const header=viewDates.map(d=>`<th>${escapeHTML(d.slice(5).split('-').reverse().join('/'))}</th>`).join('') + '<th>Avance</th><th>Pend.</th>';
+  const body=stats.map(x=>{
+    const cells=viewDates.map(d=>{ const c=countMap.get(x.name+'|'+d)||0; const bg=heatBg(c,max,'blue'); const color=heatText(c,max); return `<td><div class="heatcell ${c===0?'zero':''}" style="background:${bg};color:${c===0?'#8a95a8':color}">${c||''}</div></td>`; }).join('');
+    return `<tr><td><div class="heatRowLabel" data-heat-verifier="${escapeHTML(x.name)}"><div><b>${escapeHTML(x.name)}</b><span>${escapeHTML(x.supervisor||'Sin supervisor')}</span></div><span>${fmtInt(x.assigned)} asig.</span></div></td>${cells}<td><span class="metricPill ${x.progress>=40?'good':x.progress>=20?'mid':'warn'}">${fmtPct(x.progress)}</span></td><td><span class="metricPill ${x.pending>=20?'warn':'mid'}">${fmtInt(x.pending)}</span></td></tr>`;
+  }).join('');
+  box.innerHTML=`<table class="heatTable"><thead><tr><th>Encuestador/a</th>${header}</tr></thead><tbody>${body}</tbody></table>`;
+  box.querySelectorAll('[data-heat-verifier]').forEach(el=>el.addEventListener('click',()=>setDashboardFilter('fEncuestador',el.dataset.heatVerifier)));
+}
+function renderComunaHeatmap(rows){
+  const box=$('#comunaHeatmap');
+  const map=new Map();
+  for(const r of rows){ const k=r.comuna||'Sin comuna'; if(!map.has(k)) map.set(k,[]); map.get(k).push(r); }
+  const arr=[...map].map(([name,a])=>{ const assigned=a.filter(r=>r.assigned).length, managed=a.filter(r=>r.managed).length, pending=Math.max(0,assigned-managed), unassigned=a.length-assigned, progress=assigned?managed/assigned*100:0; return {name,total:a.length,assigned,managed,pending,unassigned,progress}; }).sort((a,b)=>b.total-a.total).slice(0,10);
+  $('#heatComunaBadge').textContent=arr.length?`${fmtInt(arr.length)} comunas`:'Sin datos';
+  if(!arr.length){ box.innerHTML='<div class="muted" style="padding:14px">Sin comunas visibles con los filtros actuales.</div>'; return; }
+  const maxTotal=Math.max(...arr.map(x=>x.total),1), maxManaged=Math.max(...arr.map(x=>x.managed),1), maxPending=Math.max(...arr.map(x=>x.pending),1), maxUnassigned=Math.max(...arr.map(x=>x.unassigned),1);
+  const body=arr.map(x=>`<tr><td><div class="heatRowLabel" data-heat-comuna="${escapeHTML(x.name)}"><div><b>${escapeHTML(x.name)}</b><span>${fmtInt(x.total)} empresas</span></div><span></span></div></td><td><div class="heatcell" style="background:${heatBg(x.total,maxTotal,'blue')};color:${heatText(x.total,maxTotal)}">${fmtInt(x.total)}</div></td><td><div class="heatcell" style="background:${heatBg(x.managed,maxManaged,'green')};color:${heatText(x.managed,maxManaged)}">${fmtInt(x.managed)}</div></td><td><div class="heatcell ${x.pending===0?'zero':''}" style="background:${heatBg(x.pending,maxPending,'amber')};color:${x.pending===0?'#8a95a8':heatText(x.pending,maxPending)}">${fmtInt(x.pending)}</div></td><td><div class="heatcell ${x.unassigned===0?'zero':''}" style="background:${heatBg(x.unassigned,maxUnassigned,'blue')};color:${x.unassigned===0?'#8a95a8':heatText(x.unassigned,maxUnassigned)}">${fmtInt(x.unassigned)}</div></td><td><span class="metricPill ${x.progress>=40?'good':x.progress>=20?'mid':'warn'}">${fmtPct(x.progress)}</span></td></tr>`).join('');
+  box.innerHTML=`<table class="heatTable"><thead><tr><th>Comuna</th><th>Empresas</th><th>Gestionadas</th><th>Pendientes</th><th>Sin asignar</th><th>Avance</th></tr></thead><tbody>${body}</tbody></table>`;
+  box.querySelectorAll('[data-heat-comuna]').forEach(el=>el.addEventListener('click',()=>setDashboardFilter('fComuna',el.dataset.heatComuna)));
+}
+function renderQuickSupervisorCards(rows){
+  const box=$('#quickSupervisorCards');
+  const map=new Map();
+  for(const r of rows){ if(!r.supervisor) continue; if(!map.has(r.supervisor)) map.set(r.supervisor,[]); map.get(r.supervisor).push(r); }
+  const arr=[...map].map(([name,a])=>{ const assigned=a.filter(r=>r.assigned).length, managed=a.filter(r=>r.managed).length, pending=Math.max(0,assigned-managed), progress=assigned?managed/assigned*100:0; return {name,assigned,managed,pending,progress}; }).sort((a,b)=>b.assigned-a.assigned || b.progress-a.progress);
+  $('#quickSupBadge').textContent=arr.length?`${fmtInt(arr.length)} supervisor(es)`:'Sin datos';
+  box.innerHTML=arr.length?arr.map(x=>`<div class="quickCard" data-quick-supervisor="${escapeHTML(x.name)}"><div class="qn">${escapeHTML(x.name)}</div><div class="qs">${fmtInt(x.assigned)} asignadas · ${fmtInt(x.pending)} pendientes</div><div class="qv">${fmtPct(x.progress)}</div><div class="qt">${fmtInt(x.managed)} gestionadas</div></div>`).join(''):'<div class="muted">Sin supervisores visibles con los filtros actuales.</div>';
+  box.querySelectorAll('[data-quick-supervisor]').forEach(el=>el.addEventListener('click',()=>setDashboardFilter('fSupervisor',el.dataset.quickSupervisor)));
+}
+
+// ------------------------------
+// Detalle completo por encuestador/a
+// ------------------------------
+function renderVerifierDetail(rows){
+  const root=$('#verifierDetailGroups');
+  if(!root) return;
+  const q=fold($('#detailSearch')?.value||'');
+  const status=$('#detailStatus')?.value||'';
+  let view=rows.filter(r=>(!status || r.status===status));
+  if(q) view=view.filter(r=>fold([r.folio,r.sector,r.comuna,r.verifier,r.supervisor].join(' ')).includes(q));
+  const groups=new Map();
+  for(const r of view){ const key=r.verifier||'Sin asignar'; if(!groups.has(key)) groups.set(key,[]); groups.get(key).push(r); }
+  const stats=[...groups.entries()].map(([name,a])=>{
+    const assigned=a.filter(r=>r.assigned).length, managed=a.filter(r=>r.managed).length, pending=a.filter(r=>r.assigned&&!r.managed).length;
+    const progress=assigned?managed/assigned*100:0;
+    const supervisor=a.find(r=>r.supervisor)?.supervisor||'';
+    return {name,a,assigned,managed,pending,progress,supervisor};
+  }).sort((a,b)=>{
+    if(a.name==='Sin asignar') return 1; if(b.name==='Sin asignar') return -1;
+    return b.progress-a.progress || b.managed-a.managed || a.name.localeCompare(b.name,'es');
+  });
+  $('#detailCount').textContent=`${fmtInt(view.length)} empresas visibles · ${fmtInt(stats.length)} grupo(s)`;
+  if(!stats.length){ root.innerHTML='<div class="vgEmpty">No hay empresas que coincidan con los criterios actuales.</div>'; return; }
+  root.innerHTML=stats.map((g,i)=>{
+    const rowsHtml=g.a.slice().sort((a,b)=>{
+      const da=a.date?a.date.getTime():0, db=b.date?b.date.getTime():0;
+      return db-da || String(a.folio).localeCompare(String(b.folio),'es');
+    }).map(r=>`<tr><td><b>${escapeHTML(r.folio)}</b></td><td>${escapeHTML(r.sector||'—')}</td><td>${escapeHTML(r.comuna||'—')}</td><td>${modePill(r)}</td><td>${r.date?displayDate(r.date):'—'}</td><td>${statusPill(r.status)}</td></tr>`).join('');
+    return `<details class="verifierGroup" ${i===0?'open':''}>
+      <summary>
+        <div><div class="vgName">${escapeHTML(g.name)}</div><div class="vgSup">${escapeHTML(g.supervisor|| (g.name==='Sin asignar'?'Sin supervisor':'Supervisor no informado'))}</div></div>
+        <div class="vgMetric"><b>${fmtInt(g.assigned)}</b><span>Asignadas</span></div>
+        <div class="vgMetric"><b>${fmtInt(g.managed)}</b><span>Gestionadas</span></div>
+        <div class="vgMetric"><b>${fmtInt(g.pending)}</b><span>Pendientes</span></div>
+        <div class="vgMetric"><b>${g.name==='Sin asignar'?'—':fmtPct(g.progress)}</b><span>Avance</span></div>
+        <div class="vgOpen">Ver empresas ▾</div>
+      </summary>
+      <div class="vgTableWrap"><table class="vgTable"><thead><tr><th>Folio</th><th>Sector</th><th>Comuna</th><th>Modalidad</th><th>Fecha</th><th>Estado</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
+    </details>`;
+  }).join('');
+}
+render = function(){
+  const rows=filteredRows();
+  renderFilterMeta();
+  renderKpis(rows);
+  renderTimeline(rows);
+  renderModes(rows);
+  renderCompactDecision(rows);
+  renderVerifierHeatmap(rows);
+  renderComunaHeatmap(rows);
+  renderQuickSupervisorCards(rows);
+  renderRanking(rows);
+  renderVerifierDetail(rows);
+  // keep hidden legacy panels updated in case user unhides them later
+  renderSupervisors(rows); renderSectors(rows); renderQuality(); renderDecisionPanel(rows); renderVerifiers(rows); renderCompanies(rows);
+}
+
+
+$('#detailSearch')?.addEventListener('input',()=>renderVerifierDetail(filteredRows()));
+$('#detailStatus')?.addEventListener('change',()=>renderVerifierDetail(filteredRows()));
 </script>
 </body>
 </html>
