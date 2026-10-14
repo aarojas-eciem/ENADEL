@@ -129,7 +129,7 @@ button,input,select{font:inherit}
     <div>
       <div class="dropicon">⇧</div>
       <h2>Arrastra aquí la última versión del archivo</h2>
-      <p>El dashboard busca la hoja <b>Empresas_Muestra_ENADEL26</b>, valida su estructura y utiliza únicamente folio, sector, tramo, comuna, encuestador, usuario Suso, supervisor, modalidad y fecha.</p>
+      <p>El dashboard busca la hoja <b>Empresas_Muestra_ENADEL26</b>, valida su estructura y utiliza únicamente folio, sector, tramo, comuna, encuestador, usuario Suso, supervisor, modalidad y fecha. Reconoce todas las modalidades informadas, normaliza tildes y distingue observaciones administrativas.</p>
       <p><button class="btn primary" id="welcomeLoad">Seleccionar archivo .xlsx</button></p>
       <div class="privacy">🔒 El archivo se procesa localmente en este navegador. No se sube a GitHub ni se envía a un servidor.</div>
     </div>
@@ -154,7 +154,7 @@ button,input,select{font:inherit}
     <section class="kpis">
       <div class="kpi panel"><div class="label">Empresas</div><div class="value" id="kTotal">—</div><div class="sub" id="kTotalSub">muestra visible</div></div>
       <div class="kpi panel"><div class="label">Asignadas</div><div class="value" id="kAssigned">—</div><div class="sub" id="kAssignedSub">con encuestador/a</div></div>
-      <div class="kpi panel"><div class="label">Gestionadas</div><div class="value" id="kManaged">—</div><div class="sub">fecha + modalidad válida</div></div>
+      <div class="kpi panel"><div class="label">Gestionadas</div><div class="value" id="kManaged">—</div><div class="sub">cualquier modalidad de aplicación + fecha válida</div></div>
       <div class="kpi panel"><div class="label">Pendientes</div><div class="value" id="kPending">—</div><div class="sub">asignadas sin gestión válida</div></div>
       <div class="kpi panel"><div class="label">Sin asignar</div><div class="value" id="kUnassigned">—</div><div class="sub">sin encuestador/a</div></div>
       <div class="kpi panel progress"><div class="label">Avance</div><div class="value" id="kProgress">—</div><div class="sub">gestionadas / asignadas</div></div>
@@ -162,12 +162,12 @@ button,input,select{font:inherit}
 
     <section class="grid2">
       <article class="card panel">
-        <div class="cardhead"><div><h3>Evolución diaria de gestiones</h3><p>Presencial y telefónica; línea de acumulado</p></div><span class="badge" id="dateRange">—</span></div>
-        <div class="legend"><span><i class="dot pres"></i>Presencial</span><span><i class="dot tel"></i>Telefónica</span><span><i class="dot acc"></i>Acumulado</span></div>
+        <div class="cardhead"><div><h3>Evolución diaria de gestiones</h3><p>Todas las modalidades registradas con fecha válida; línea de acumulado</p></div><span class="badge" id="dateRange">—</span></div>
+        <div class="legend" id="timelineLegend"><span><i class="dot acc"></i>Acumulado</span></div>
         <div class="chart" id="timelineChart"></div>
       </article>
       <article class="card panel">
-        <div class="cardhead"><div><h3>Modalidad de las gestiones</h3><p>Solo registros con gestión válida</p></div><span class="badge" id="modeBadge">—</span></div>
+        <div class="cardhead"><div><h3>Modalidad de las gestiones</h3><p>Categorías dinámicas del Excel · se exige fecha válida</p></div><span class="badge" id="modeBadge">—</span></div>
         <div class="donutwrap">
           <div class="donut" id="modeDonut"><div class="donutcenter"><div><strong id="modeTotal">0</strong><small>gestiones</small></div></div></div>
           <div class="statlist" id="modeStats"></div>
@@ -258,7 +258,7 @@ button,input,select{font:inherit}
 
     <section class="panel tablecard">
       <div class="tabletop"><div><b>Avance por encuestador/a</b><div class="muted" style="font-size:11px;margin-top:4px">Haz clic en una fila para filtrar el dashboard por esa persona.</div></div><span class="badge" id="verifierCount">—</span></div>
-      <div class="tablescroll"><table><thead><tr><th>Encuestador/a</th><th>Supervisor/a</th><th class="num">Asignadas</th><th class="num">Gestionadas</th><th class="num">Pendientes</th><th class="num">Avance</th><th class="num">Presencial</th><th class="num">Telefónica</th><th>Última gestión</th><th>Evolución</th></tr></thead><tbody id="verifierBody"></tbody></table></div>
+      <div class="tablescroll"><table><thead><tr id="verifierHeader"></tr></thead><tbody id="verifierBody"></tbody></table></div>
     </section>
 
     <section class="panel tablecard">
@@ -293,7 +293,7 @@ button,input,select{font:inherit}
 // ------------------------------
 const REQUIRED = ['folio_emp','rubo_econ_sii','subrubro_econ_sii','act_econ_sii','rama','tramo','comuna_sii','Verificador/a','Usuario Suso','Supervisor/a','Modalidad','Fecha'];
 const KEEP = new Set(REQUIRED);
-const state = {rows:[], sourceName:'', loadedAt:null, quality:[], rawCount:0};
+const state = {rows:[], sourceName:'', loadedAt:null, quality:[], rawCount:0, modeLabels:new Map()};
 const $ = s => document.querySelector(s);
 const fmtInt = n => new Intl.NumberFormat('es-CL').format(n || 0);
 const fmtPct = n => Number.isFinite(n) ? new Intl.NumberFormat('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)+'%' : '—';
@@ -308,12 +308,61 @@ const displayDate = d => {
 };
 const shortDate = d => new Intl.DateTimeFormat('es-CL',{day:'2-digit',month:'short',timeZone:'UTC'}).format(d).replace('.','');
 
+// Una modalidad nueva no queda descartada por no estar en un catálogo fijo.
+// El valor original se conserva en rawMode y se normaliza para agrupar tildes,
+// espacios, diferencias entre mayúsculas/minúsculas y variantes habituales.
+function modeKey(v){
+  return fold(v).replace(/[.,;:()_\/-]+/g,' ').replace(/\s+/g,' ').trim();
+}
+const KNOWN_MODES = ['Presencial', 'Telefónica', 'Telemática'];
+function standardMode(v){
+  const k = modeKey(v);
+  if(!k) return 'Sin gestión';
+  if(/^(presencial|visita presencial|en terreno)$/.test(k)) return 'Presencial';
+  if(/^(telefonica|telefonico|telefono|por telefono|via telefonica|via telefono|llamada telefonica)$/.test(k)) return 'Telefónica';
+  if(/^(telematica|telematico|via telematica|via telematica|virtual|online|on line|en linea|videollamada|video llamada|videoconferencia)$/.test(k)) return 'Telemática';
+  if(/^(sin gestion|sin modalidad|sin informacion|sin dato|no informado|no informada|pendiente|n a|na|no aplica|ninguna|ninguno|0+|s m|s i)$/.test(k)) return 'Sin gestión';
+  return null; // categoría adicional: se mantiene y se ofrece en filtros y gráficos
+}
+function isAdministrativeMode(v){
+  // No confundir observaciones o estados administrativos con la vía de contacto.
+  const k=modeKey(v);
+  return /^(rut no corresponde|rut incorrecto|rut invalido|empresa no existe|no corresponde|fuera de muestra|duplicado|duplicada|rechazo|no contactado|sin contacto|no ubicado|no ubicada)$/.test(k);
+}
+function buildModeLabels(rows){
+  const labels=new Map();
+  for(const row of rows){
+    const raw=strip(row['Modalidad']);
+    const standard=standardMode(raw);
+    if(standard){ labels.set(modeKey(raw), standard); continue; }
+    const key=modeKey(raw);
+    if(key && !labels.has(key)) labels.set(key,raw);
+  }
+  return labels;
+}
 function normalizeMode(v){
-  const f = fold(v);
-  if(!f) return 'Sin gestión';
-  if(f === 'presencial' || f.includes('presencial')) return 'Presencial';
-  if(f === 'telefonica' || f.includes('telefonic')) return 'Telefónica';
-  return 'Otra / revisar';
+  const raw=strip(v), standard=standardMode(raw);
+  if(standard) return standard;
+  return state.modeLabels.get(modeKey(raw)) || raw || 'Sin gestión';
+}
+function validMode(v){ return !!v && v!=='Sin gestión' && !isAdministrativeMode(v); }
+function modeOrder(a,b){
+  const ia=KNOWN_MODES.indexOf(a), ib=KNOWN_MODES.indexOf(b);
+  if(ia>=0 || ib>=0) return (ia>=0?ia:KNOWN_MODES.length)-(ib>=0?ib:KNOWN_MODES.length);
+  return a.localeCompare(b,'es');
+}
+function managedModeCounts(rows){
+  const counts=new Map();
+  for(const r of rows){ if(r.managed) counts.set(r.mode,(counts.get(r.mode)||0)+1); }
+  return [...counts].sort((a,b)=>modeOrder(a[0],b[0]));
+}
+const MODE_COLORS = {'Presencial':'#2d6ea8','Telefónica':'#6fb1d6','Telemática':'#7656a6'};
+const EXTRA_MODE_COLORS = ['#c78b39','#db6b7b','#259287','#6e83a2','#aa79c5','#c05d48','#8d9e43','#578cbd','#a37f62','#aa5a85'];
+function modeColor(name){
+  if(MODE_COLORS[name]) return MODE_COLORS[name];
+  const extra=[...new Set(state.rows.filter(r=>validMode(r.mode)).map(r=>r.mode))].filter(m=>!MODE_COLORS[m]).sort((a,b)=>a.localeCompare(b,'es'));
+  const i=Math.max(0,extra.indexOf(name));
+  return i<EXTRA_MODE_COLORS.length?EXTRA_MODE_COLORS[i]:`hsl(${(i*137.508)%360} 45% 45%)`;
 }
 function normalizeRow(r){
   const verifier = titleName(r['Verificador/a']);
@@ -323,10 +372,10 @@ function normalizeRow(r){
   if(typeof date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(date)) date = new Date(date.slice(0,10)+'T00:00:00Z');
   if(!(date instanceof Date) || isNaN(date)) date = null;
   const assigned = !!verifier;
-  const managed = (mode === 'Presencial' || mode === 'Telefónica') && !!date;
+  const managed = validMode(mode) && !!date;
   const rawMode = strip(r['Modalidad']);
   let status = managed ? 'Gestionada' : (assigned ? 'Pendiente' : 'Sin asignar');
-  if(mode === 'Otra / revisar') status = 'Revisar';
+  if(isAdministrativeMode(mode)) status = 'Revisar';
   return {
     folio: strip(r['folio_emp']), sector: strip(r['rubo_econ_sii']), subsector: strip(r['subrubro_econ_sii']),
     actividad: strip(r['act_econ_sii']), rama: strip(r['rama']), tramo: strip(r['tramo']), comuna: strip(r['comuna_sii']),
@@ -470,6 +519,7 @@ async function handleFile(file){
   try{
     const parsed=await parseXlsx(file);
     state.rawCount=parsed.rows.length;
+    state.modeLabels=buildModeLabels(parsed.rows);
     state.rows=parsed.rows.map(normalizeRow);
     state.sourceName=file.name; state.loadedAt=new Date();
     buildQuality(parsed.rows,state.rows);
@@ -485,12 +535,14 @@ function buildQuality(raw,norm){
   const q=[];
   const duplicateFolios=norm.length-new Set(norm.map(r=>r.folio)).size;
   if(duplicateFolios>0) q.push({level:'error',title:'Folios duplicados',text:`Se detectaron ${duplicateFolios} registros con folios repetidos.`});
-  const oddModes=norm.filter(r=>r.mode==='Otra / revisar');
-  if(oddModes.length) q.push({level:'warn',title:'Modalidad fuera de catálogo',text:`${oddModes.length} registro(s): ${[...new Set(oddModes.map(r=>r.rawMode))].slice(0,4).join(', ')}.`});
-  const modeNoDate=norm.filter(r=>(r.mode==='Presencial'||r.mode==='Telefónica')&&!r.date).length;
-  if(modeNoDate) q.push({level:'warn',title:'Modalidad sin fecha',text:`${modeNoDate} registro(s) tienen modalidad válida pero no fecha.`});
-  const dateNoMode=norm.filter(r=>r.date && !(r.mode==='Presencial'||r.mode==='Telefónica')).length;
-  if(dateNoMode) q.push({level:'warn',title:'Fecha sin modalidad válida',text:`${dateNoMode} registro(s) tienen fecha pero la modalidad requiere revisión.`});
+  const extraModes=norm.filter(r=>validMode(r.mode) && !KNOWN_MODES.includes(r.mode));
+  if(extraModes.length) q.push({level:'warn',title:'Modalidades adicionales contabilizadas',text:`${extraModes.length} registro(s) en ${[...new Set(extraModes.map(r=>r.mode))].join(', ')}. Se contabilizan si tienen fecha válida; conviene confirmar que sean vías de contacto.`});
+  const adminModes=norm.filter(r=>isAdministrativeMode(r.mode));
+  if(adminModes.length) q.push({level:'warn',title:'Observaciones en columna Modalidad',text:`${adminModes.length} registro(s): ${[...new Set(adminModes.map(r=>r.rawMode))].slice(0,5).join(', ')}. Se muestran en el filtro, pero no constituyen modalidades de aplicación.`});
+  const modeNoDate=norm.filter(r=>validMode(r.mode)&&!r.date).length;
+  if(modeNoDate) q.push({level:'warn',title:'Modalidad sin fecha',text:`${modeNoDate} registro(s) tienen modalidad informada, pero no fecha: no se contabilizan.`});
+  const dateNoMode=norm.filter(r=>r.date && !validMode(r.mode)).length;
+  if(dateNoMode) q.push({level:'warn',title:'Fecha sin modalidad válida',text:`${dateNoMode} registro(s) tienen fecha sin modalidad de aplicación: requieren revisión.`});
   const nameCaseGroups=new Map();
   for(const r of raw){ const v=strip(r['Verificador/a']); if(v){const k=fold(v); if(!nameCaseGroups.has(k)) nameCaseGroups.set(k,new Set()); nameCaseGroups.get(k).add(v);} }
   const variants=[...nameCaseGroups.values()].filter(s=>s.size>1);
@@ -570,10 +622,16 @@ function renderKpis(rows){
   const global=rows.length===state.rows.length; $('#kTotalSub').textContent=global?'muestra total':'muestra filtrada'; $('#kAssignedSub').textContent=global?'con encuestador/a':'en selección actual';
 }
 function renderModes(rows){
-  const managed=rows.filter(r=>r.managed), p=managed.filter(r=>r.mode==='Presencial').length, t=managed.filter(r=>r.mode==='Telefónica').length, total=p+t;
-  const deg=total?p/total*360:0; $('#modeDonut').style.background=total?`conic-gradient(var(--blue) 0deg ${deg}deg,var(--cyan) ${deg}deg 360deg)`:'#eef2f7';
-  $('#modeTotal').textContent=fmtInt(total); $('#modeBadge').textContent=total?fmtPct(p/total*100)+' presencial':'Sin gestiones';
-  $('#modeStats').innerHTML=`<div class="statrow"><span><i class="dot pres"></i> Presencial</span><strong>${fmtInt(p)} <small class="muted">${total?fmtPct(p/total*100):'—'}</small></strong></div><div class="statrow"><span><i class="dot tel"></i> Telefónica</span><strong>${fmtInt(t)} <small class="muted">${total?fmtPct(t/total*100):'—'}</small></strong></div>`;
+  const counts=managedModeCounts(rows), total=counts.reduce((s,[,n])=>s+n,0);
+  let deg=0;
+  const segments=counts.map(([name,n])=>{
+    const from=deg; deg+=n/total*360;
+    return `${modeColor(name)} ${from.toFixed(4)}deg ${deg.toFixed(4)}deg`;
+  });
+  $('#modeDonut').style.background=total?`conic-gradient(${segments.join(',')})`:'#eef2f7';
+  $('#modeTotal').textContent=fmtInt(total);
+  $('#modeBadge').textContent=total?`${fmtInt(counts.length)} modalidad${counts.length===1?'':'es'}`:'Sin gestiones';
+  $('#modeStats').innerHTML=counts.length?counts.map(([name,n])=>`<div class="statrow"><span><i class="dot" style="background:${modeColor(name)}"></i> ${escapeHTML(name)}</span><strong>${fmtInt(n)} <small class="muted">${fmtPct(n/total*100)}</small></strong></div>`).join(''):'<div class="muted">Sin gestiones válidas para la selección.</div>';
 }
 function renderSupervisors(rows){
   const map=new Map(); for(const r of rows){ if(!r.supervisor) continue; if(!map.has(r.supervisor))map.set(r.supervisor,[]);map.get(r.supervisor).push(r); }
@@ -596,18 +654,38 @@ function renderQuality(){
 // Timeline SVG
 // ------------------------------
 function renderTimeline(rows){
-  const managed=rows.filter(r=>r.managed).sort((a,b)=>a.date-b.date); const box=$('#timelineChart');
+  const managed=rows.filter(r=>r.managed).sort((a,b)=>a.date-b.date);
+  const box=$('#timelineChart'), modes=managedModeCounts(managed).map(([name])=>name);
+  $('#timelineLegend').innerHTML=modes.map(name=>`<span><i class="dot" style="background:${modeColor(name)}"></i>${escapeHTML(name)}</span>`).join('')+'<span><i class="dot acc"></i>Acumulado</span>';
   if(!managed.length){box.innerHTML='<div class="muted" style="padding:80px 0;text-align:center">No hay gestiones válidas con los filtros actuales.</div>';$('#dateRange').textContent='Sin fechas';return;}
-  const map=new Map(); for(const r of managed){const k=isoDate(r.date);if(!map.has(k))map.set(k,{date:r.date,p:0,t:0}); if(r.mode==='Presencial')map.get(k).p++;else map.get(k).t++;}
-  const data=[...map.values()].sort((a,b)=>a.date-b.date); let acc=0; data.forEach(d=>{acc+=d.p+d.t;d.acc=acc;});
+  const map=new Map();
+  for(const r of managed){
+    const k=isoDate(r.date);
+    if(!map.has(k)) map.set(k,{date:r.date,byMode:new Map(),total:0});
+    const day=map.get(k);
+    day.byMode.set(r.mode,(day.byMode.get(r.mode)||0)+1);
+    day.total++;
+  }
+  const data=[...map.values()].sort((a,b)=>a.date-b.date);
+  let acc=0; data.forEach(d=>{acc+=d.total;d.acc=acc;});
   $('#dateRange').textContent=`${shortDate(data[0].date)} – ${shortDate(data[data.length-1].date)}`;
-  const W=900,H=300,L=44,R=34,T=20,B=48,iw=W-L-R,ih=H-T-B; const maxBar=Math.max(1,...data.map(d=>d.p+d.t)); const maxAcc=Math.max(1,data[data.length-1].acc); const step=iw/data.length, bw=Math.min(34,step*.62);
-  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución diaria">`;
+  const W=900,H=300,L=44,R=34,T=20,B=48,iw=W-L-R,ih=H-T-B;
+  const maxBar=Math.max(1,...data.map(d=>d.total)), maxAcc=Math.max(1,data[data.length-1].acc);
+  const step=iw/data.length, bw=Math.min(34,step*.62);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución diaria por modalidad">`;
   for(let g=0;g<=4;g++){const y=T+ih*g/4;const val=Math.round(maxBar*(1-g/4));svg+=`<line class="gridline" x1="${L}" y1="${y}" x2="${W-R}" y2="${y}"/><text class="axis" x="${L-8}" y="${y+4}" text-anchor="end">${val}</text>`;}
   const pts=[];
-  data.forEach((d,i)=>{const x=L+step*i+step/2, hp=d.p/maxBar*ih, ht=d.t/maxBar*ih, y0=T+ih; const label=shortDate(d.date); const every=data.length>12?Math.ceil(data.length/7):1;
-    svg+=`<rect data-tip="${label} · Presencial: ${d.p}" x="${x-bw/2}" y="${y0-hp}" width="${bw}" height="${hp}" rx="3" fill="var(--blue)"/>`;
-    svg+=`<rect data-tip="${label} · Telefónica: ${d.t}" x="${x-bw/2}" y="${y0-hp-ht}" width="${bw}" height="${ht}" rx="3" fill="var(--cyan)"/>`;
+  data.forEach((d,i)=>{
+    const x=L+step*i+step/2, y0=T+ih, label=shortDate(d.date);
+    const every=data.length>12?Math.ceil(data.length/7):1;
+    let stacked=0;
+    for(const name of modes){
+      const n=d.byMode.get(name)||0;
+      if(!n) continue;
+      const h=n/maxBar*ih;
+      svg+=`<rect data-tip="${escapeHTML(label+' · '+name+': '+n)}" x="${x-bw/2}" y="${y0-stacked-h}" width="${bw}" height="${h}" rx="2" fill="${modeColor(name)}"/>`;
+      stacked+=h;
+    }
     if(i%every===0||i===data.length-1)svg+=`<text class="axis" x="${x}" y="${H-20}" text-anchor="middle">${label}</text>`;
     const ly=T+ih-(d.acc/maxAcc*ih);pts.push([x,ly,d]);
   });
@@ -732,13 +810,19 @@ function renderRanking(rows){
 // Tabla de encuestadores
 // ------------------------------
 function renderVerifiers(rows){
+  const modes=managedModeCounts(state.rows).map(([name])=>name);
+  $('#verifierHeader').innerHTML=['Encuestador/a','Supervisor/a','Asignadas','Gestionadas','Pendientes','Avance',...modes,'Última gestión','Evolución']
+    .map((name,i)=>`<th ${i>=2&&i<6+modes.length?'class="num"':''}>${escapeHTML(name)}</th>`).join('');
   const map=new Map(); for(const r of rows){ if(!r.verifier) continue; if(!map.has(r.verifier))map.set(r.verifier,[]);map.get(r.verifier).push(r); }
   const arr=[...map].map(([name,a])=>{
-    const assigned=a.filter(r=>r.assigned).length, m=a.filter(r=>r.managed), p=m.filter(r=>r.mode==='Presencial').length,t=m.filter(r=>r.mode==='Telefónica').length,last=m.length?new Date(Math.max(...m.map(r=>r.date.getTime()))):null;
-    const daily=new Map();m.forEach(r=>daily.set(isoDate(r.date),(daily.get(isoDate(r.date))||0)+1));return {name,supervisor:a.find(r=>r.supervisor)?.supervisor||'',assigned,managed:m.length,pending:assigned-m.length,p,t,last,daily};
+    const assigned=a.filter(r=>r.assigned).length, m=a.filter(r=>r.managed), last=m.length?new Date(Math.max(...m.map(r=>r.date.getTime()))):null;
+    const counts=managedModeCounts(m);
+    const byMode=new Map(counts);
+    const daily=new Map();m.forEach(r=>daily.set(isoDate(r.date),(daily.get(isoDate(r.date))||0)+1));
+    return {name,supervisor:a.find(r=>r.supervisor)?.supervisor||'',assigned,managed:m.length,pending:assigned-m.length,byMode,last,daily};
   }).sort((a,b)=>(b.managed-a.managed)||(b.assigned-a.assigned)||a.name.localeCompare(b.name,'es'));
   $('#verifierCount').textContent=fmtInt(arr.length)+' encuestadores';
-  $('#verifierBody').innerHTML=arr.map(x=>`<tr class="clickrow" data-verifier="${escapeHTML(x.name)}"><td><b>${escapeHTML(x.name)}</b></td><td>${escapeHTML(x.supervisor)}</td><td class="num">${fmtInt(x.assigned)}</td><td class="num">${fmtInt(x.managed)}</td><td class="num">${fmtInt(x.pending)}</td><td class="num"><b>${fmtPct(x.assigned?x.managed/x.assigned*100:NaN)}</b></td><td class="num">${fmtInt(x.p)}</td><td class="num">${fmtInt(x.t)}</td><td>${displayDate(x.last)}</td><td>${sparkline(x.daily)}</td></tr>`).join('') || '<tr><td colspan="10" class="muted">Sin encuestadores con los filtros actuales.</td></tr>';
+  $('#verifierBody').innerHTML=arr.map(x=>`<tr class="clickrow" data-verifier="${escapeHTML(x.name)}"><td><b>${escapeHTML(x.name)}</b></td><td>${escapeHTML(x.supervisor)}</td><td class="num">${fmtInt(x.assigned)}</td><td class="num">${fmtInt(x.managed)}</td><td class="num">${fmtInt(x.pending)}</td><td class="num"><b>${fmtPct(x.assigned?x.managed/x.assigned*100:NaN)}</b></td>${modes.map(mode=>`<td class="num">${fmtInt(x.byMode.get(mode)||0)}</td>`).join('')}<td>${displayDate(x.last)}</td><td>${sparkline(x.daily)}</td></tr>`).join('') || `<tr><td colspan="${8+modes.length}" class="muted">Sin encuestadores con los filtros actuales.</td></tr>`;
   $('#verifierBody').querySelectorAll('tr[data-verifier]').forEach(tr=>tr.addEventListener('click',()=>setDashboardFilter('fEncuestador',tr.dataset.verifier)));
 }
 function sparkline(daily){
@@ -757,10 +841,10 @@ function renderCompanies(rows){
   if(arr.length>limit) $('#companyBody').insertAdjacentHTML('beforeend',`<tr><td colspan="8" class="muted">Mostrando ${fmtInt(limit)} de ${fmtInt(arr.length)} registros. Usa filtros o búsqueda para acotar.</td></tr>`);
 }
 function modePill(r){
-  if(r.mode==='Presencial')return '<span class="pill done">Presencial</span>';
-  if(r.mode==='Telefónica')return '<span class="pill" style="background:#eaf3fb;color:#315f85">Telefónica</span>';
-  if(r.mode==='Otra / revisar')return `<span class="pill warn">${escapeHTML(r.rawMode||'Revisar')}</span>`;
-  return '<span class="pill none">Sin gestión</span>';
+  if(r.mode==='Sin gestión')return '<span class="pill none">Sin gestión</span>';
+  if(!validMode(r.mode))return `<span class="pill warn" title="Observación administrativa, no modalidad">${escapeHTML(r.rawMode||r.mode)}</span>`;
+  const color=modeColor(r.mode);
+  return `<span class="pill" style="background:#f4f7fb;color:${color};border:1px solid ${color}">${escapeHTML(r.mode)}</span>`;
 }
 function statusPill(s){const cls=s==='Gestionada'?'done':s==='Pendiente'?'pending':s==='Revisar'?'warn':'none';return `<span class="pill ${cls}">${escapeHTML(s)}</span>`;}
 
