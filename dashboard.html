@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>ENADEL 2026 · Control de Terreno</title>
+<title>ENADEL 2026 · Seguimiento integrado</title>
 <style>
 :root{
   --bg:#f5f7fb; --panel:#ffffff; --ink:#172033; --muted:#65718a; --line:#e4e9f2;
@@ -113,34 +113,43 @@ button,input,select{font:inherit}
 .detailCount{font-size:11px;color:var(--muted);margin-top:8px}
 @media(max-width:900px){.verifierGroup summary{grid-template-columns:1fr 1fr 1fr}.vgOpen{grid-column:1/-1;text-align:right}}
 
+
+.sourcepanel,.phasecomparison{padding:20px;margin-bottom:18px}.sourcehead h2,.phasecomparison h2{font-size:17px;margin:0 0 8px}.sourcepanel p,.phasecomparison p{font-size:12px;color:var(--muted);line-height:1.6}.sourcecards{display:grid;grid-template-columns:1fr 1fr;gap:14px}.sourcecard{padding:18px;border:1px dashed #b6cbdc;border-radius:14px;background:#f8fbfe;min-width:0}.sourcecard.loaded{border-style:solid;border-color:#9dcfbd;background:#f4faf7}.sourcecard h3{margin:0 0 8px;font-size:15px}.sourcecard .filename{overflow-wrap:anywhere;font-size:12px}.sourcecard .btn{margin:10px 6px 0 0}.sourcepanel.drag{outline:3px solid var(--blue)}#loadMessage{margin-bottom:0}#loadMessage.error{color:#a03939}.phasecomparison table{width:100%;border-collapse:collapse}.phasecomparison td,.phasecomparison th{padding:12px 8px;text-align:right;border-bottom:1px solid var(--line);font-size:12px}.phasecomparison th:first-child,.phasecomparison td:first-child{text-align:left}.phasecomparison .tablewrap{overflow:auto}.phasecomparison button{border:0;background:transparent;color:var(--blue);font-weight:750;cursor:pointer}.filters{grid-template-columns:repeat(4,1fr)}.grid3{display:grid;grid-template-columns:1fr}.grid3>article:not(:last-child){display:none}.quality{max-height:220px;overflow:auto}@media(max-width:720px){.sourcecards{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <div class="shell">
   <header class="topbar">
-    <div class="brand"><div class="brandmark">E26</div><div><h1>ENADEL 2026 · Control de Terreno</h1><p>Región de Coquimbo · Dashboard local de seguimiento</p></div></div>
+    <div class="brand"><div class="brandmark">E26</div><div><h1>ENADEL 2026 · Seguimiento integrado</h1><p>Región de Coquimbo · Fase 1 + Fase 2</p></div></div>
     <div class="actions">
-      <button class="btn hidden" id="clearBtn">Cerrar archivo</button>
-      <button class="btn primary" id="loadBtn">Cargar XLSX</button>
+      <button class="btn hidden" id="clearBtn">Vaciar dashboard</button>
+      <button class="btn primary" id="loadBtn">Cargar archivos</button>
     </div>
   </header>
 
   <section id="welcome" class="dropzone panel">
     <div>
       <div class="dropicon">⇧</div>
-      <h2>Arrastra aquí la última versión del archivo</h2>
-      <p>El dashboard busca la hoja <b>Empresas_Muestra_ENADEL26</b>, valida su estructura y utiliza únicamente folio, sector, tramo, comuna, encuestador, usuario Suso, supervisor, modalidad y fecha. Reconoce todas las modalidades informadas, normaliza tildes y distingue observaciones administrativas.</p>
-      <p><button class="btn primary" id="welcomeLoad">Seleccionar archivo .xlsx</button></p>
+      <h2>Dos fases, una mirada del terreno</h2>
+<p>Arrastra los Excel de fase 1 y fase 2, juntos o por separado. Reconocemos cada fase por su hoja y estructura, sin depender del nombre del archivo. Para actualizar una fase, carga su nueva versión.</p>
+      <p><button class="btn primary" id="welcomeLoad">Seleccionar archivos .xlsx</button></p>
       <div class="privacy">🔒 El archivo se procesa localmente en este navegador. No se sube a GitHub ni se envía a un servidor.</div>
     </div>
   </section>
 
-  <input id="fileInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+  <input id="fileInput" type="file" multiple accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
 
+  <section class="panel sourcepanel" aria-label="Archivos por fase">
+    <div class="sourcehead"><div><h2>Archivos de trabajo</h2><p>Arrastra aquí ambos Excel. Cada carga reemplaza únicamente su fase. Los archivos se conservan en memoria hasta cerrar o recargar la página.</p></div></div>
+    <div id="sourceCards" class="sourcecards"></div>
+    <p id="loadMessage" role="status" aria-live="polite"></p>
+  </section>
   <main id="dashboard" class="hidden">
     <div id="status" class="statusline ok"></div>
 
+    <section class="panel phasecomparison"><h2>Avance por fase</h2><div id="phaseSummary"></div><p>Avance de muestra = gestionadas ÷ muestra total de la fase. El avance sobre asignadas se muestra como referencia secundaria. Una gestión exige modalidad válida y fecha; no acredita una encuesta completada. La vista conjunta suma registros de ambas fases; los folios compartidos se informan por separado.</p></section>
     <section class="filters panel">
+      <div class="field"><label for="fPhase">Fase</label><select id="fPhase"><option value="">Ambas fases</option></select></div>
       <div class="field"><label>Supervisor</label><select id="fSupervisor"><option value="">Todos</option></select></div>
       <div class="field"><label>Encuestador</label><select id="fEncuestador"><option value="">Todos</option></select></div>
       <div class="field"><label>Sector</label><select id="fSector"><option value="">Todos</option></select></div>
@@ -157,7 +166,7 @@ button,input,select{font:inherit}
       <div class="kpi panel"><div class="label">Gestionadas</div><div class="value" id="kManaged">—</div><div class="sub">cualquier modalidad de aplicación + fecha válida</div></div>
       <div class="kpi panel"><div class="label">Pendientes</div><div class="value" id="kPending">—</div><div class="sub">asignadas sin gestión válida</div></div>
       <div class="kpi panel"><div class="label">Sin asignar</div><div class="value" id="kUnassigned">—</div><div class="sub">sin encuestador/a</div></div>
-      <div class="kpi panel progress"><div class="label">Avance</div><div class="value" id="kProgress">—</div><div class="sub">gestionadas / asignadas</div></div>
+      <div class="kpi panel progress"><div class="label">Avance de muestra</div><div class="value" id="kProgress">—</div><div class="sub" id="sampleProgressSub">gestionadas / muestra total</div></div>
     </section>
 
     <section class="grid2">
@@ -176,7 +185,7 @@ button,input,select{font:inherit}
     </section>
     <section class="visualgrid">
       <article class="panel compactpanel">
-        <div class="cardhead"><div><h3>Panel visual de gestión</h3><p>Resumen breve para decidir contacto: alertas y destacados en un solo lugar.</p></div><span class="badge" id="visualDecisionRef">—</span></div>
+        <div class="cardhead"><div><h3>Panel visual de gestión</h3><p>Alertas y destacados según carga asignada y actividad registrada.</p></div><span class="badge" id="visualDecisionRef">—</span></div>
         <div class="quickLegend" id="visualDecisionSummary"></div>
         <div class="overviewsplit">
           <div class="miniCol alert">
@@ -198,12 +207,12 @@ button,input,select{font:inherit}
 
     <section class="visualgrid2">
       <article class="panel compactpanel">
-        <div class="cardhead"><div><h3>Mapa de calor · comunas</h3><p>Vista territorial simple para detectar dónde se concentra el avance y la pendiente.</p></div><span class="badge" id="heatComunaBadge">—</span></div>
+        <div class="cardhead"><div><h3>Mapa de calor · comunas</h3><p>Gestiones y pendientes por comuna. El porcentaje territorial usa las empresas asignadas de cada comuna.</p></div><span class="badge" id="heatComunaBadge">—</span></div>
         <div class="heatwrap"><div id="comunaHeatmap"></div></div>
         <div class="heatnote">Clic en una comuna para filtrar. Las celdas resumen empresas, gestionadas, pendientes y avance.</div>
       </article>
       <article class="panel compactpanel">
-        <div class="cardhead"><div><h3>Supervisión rápida</h3><p>Tarjetas para leer rápido el estado por supervisor/a.</p></div><span class="badge" id="quickSupBadge">—</span></div>
+        <div class="cardhead"><div><h3>Supervisión rápida</h3><p>Gestiones y pendientes por supervisor/a. El porcentaje usa su carga asignada.</p></div><span class="badge" id="quickSupBadge">—</span></div>
         <div class="simpleRank" id="quickSupervisorCards"></div>
         <div class="heatnote">Clic en una tarjeta para filtrar por supervisor/a.</div>
       </article>
@@ -263,14 +272,14 @@ button,input,select{font:inherit}
 
     <section class="panel tablecard">
       <div class="tabletop"><div><b>Detalle de empresas</b><div class="muted" style="font-size:11px;margin-top:4px">Solo se muestran campos autorizados. No se procesa RUT, razón social, teléfonos ni correos.</div></div><div class="field" style="min-width:250px"><input id="companySearch" placeholder="Buscar folio, sector o encuestador…"></div></div>
-      <div class="tablescroll"><table><thead><tr><th>Folio</th><th>Sector</th><th>Comuna</th><th>Encuestador/a</th><th>Supervisor/a</th><th>Modalidad</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="companyBody"></tbody></table></div>
+      <div class="tablescroll"><table><thead><tr><th>Fase</th><th>Folio</th><th>Sector</th><th>Comuna</th><th>Encuestador/a</th><th>Supervisor/a</th><th>Modalidad</th><th>Fecha</th><th>Estado</th></tr></thead><tbody id="companyBody"></tbody></table></div>
     </section>
 
     <section class="panel verifierDetail">
       <div class="verifierDetailHead">
         <div>
           <h3>Detalle completo por encuestador/a</h3>
-          <p>Abre cada encuestador/a para revisar todas sus empresas visibles. Se mantienen solo campos autorizados.</p>
+          <p>Abre cada encuestador/a para revisar todas sus empresas visibles. Cada empresa conserva su fase de origen.</p>
           <div class="detailCount" id="detailCount">—</div>
         </div>
         <div class="detailTools">
@@ -293,7 +302,7 @@ button,input,select{font:inherit}
 // ------------------------------
 const REQUIRED = ['folio_emp','rubo_econ_sii','subrubro_econ_sii','act_econ_sii','rama','tramo','comuna_sii','Verificador/a','Usuario Suso','Supervisor/a','Modalidad','Fecha'];
 const KEEP = new Set(REQUIRED);
-const state = {rows:[], sourceName:'', loadedAt:null, quality:[], rawCount:0, modeLabels:new Map()};
+const state = {sources:{}, rows:[], sourceName:'', loadedAt:null, quality:[], rawCount:0, modeLabels:new Map()};
 const $ = s => document.querySelector(s);
 const fmtInt = n => new Intl.NumberFormat('es-CL').format(n || 0);
 const fmtPct = n => Number.isFinite(n) ? new Intl.NumberFormat('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)+'%' : '—';
@@ -366,9 +375,10 @@ function modeColor(name){
 }
 function normalizeRow(r){
   const verifier = titleName(r['Verificador/a']);
-  const supervisor = titleName(r['Supervisor/a']);
+  const supervisor = titleName(r['Supervisor/a']) || 'Sin supervisor';
   const mode = normalizeMode(r['Modalidad']);
   let date = r['Fecha'];
+  if(typeof date === 'string' && /^\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4}$/.test(date.trim())){ const [d,m,y]=date.trim().split(/[\/.-]/).map(Number); const dt=new Date(Date.UTC(y,m-1,d)); date=dt.getUTCFullYear()===y && dt.getUTCMonth()===m-1 && dt.getUTCDate()===d?dt:null; }
   if(typeof date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(date)) date = new Date(date.slice(0,10)+'T00:00:00Z');
   if(!(date instanceof Date) || isNaN(date)) date = null;
   const assigned = !!verifier;
@@ -377,7 +387,7 @@ function normalizeRow(r){
   let status = managed ? 'Gestionada' : (assigned ? 'Pendiente' : 'Sin asignar');
   if(isAdministrativeMode(mode)) status = 'Revisar';
   return {
-    folio: strip(r['folio_emp']), sector: strip(r['rubo_econ_sii']), subsector: strip(r['subrubro_econ_sii']),
+    phase:r.__phase, folio: strip(r['folio_emp']), sector: strip(r['rubo_econ_sii']), subsector: strip(r['subrubro_econ_sii']),
     actividad: strip(r['act_econ_sii']), rama: strip(r['rama']), tramo: strip(r['tramo']), comuna: strip(r['comuna_sii']),
     verifier, user: strip(r['Usuario Suso']), supervisor, mode, rawMode, date, assigned, managed, status
   };
@@ -462,10 +472,10 @@ async function parseXlsx(file){
   const wbDoc=xml(await zip.text('xl/workbook.xml'));
   const relDoc=xml(await zip.text('xl/_rels/workbook.xml.rels'));
   const rels=new Map(nodes(relDoc,'Relationship').map(r=>[r.getAttribute('Id'),r.getAttribute('Target')]));
-  const sheetNode=nodes(wbDoc,'sheet').find(s=>s.getAttribute('name')==='Empresas_Muestra_ENADEL26') || nodes(wbDoc,'sheet')[0];
-  if(!sheetNode) throw new Error('El libro no contiene hojas.');
-  const sheetName=sheetNode.getAttribute('name');
-  if(sheetName!=='Empresas_Muestra_ENADEL26') throw new Error('No se encontró la hoja Empresas_Muestra_ENADEL26. Se detectó como primera hoja: '+sheetName+'.');
+  const candidates=nodes(wbDoc,'sheet').filter(s=>['Empresas_Muestra_ENADEL26','BDD_unificada'].includes(s.getAttribute('name')));
+  if(candidates.length!==1) throw new Error('Se requiere una sola hoja de muestra: Empresas_Muestra_ENADEL26 (fase 1) o BDD_unificada (fase 2).');
+  const sheetNode=candidates[0], sheetName=sheetNode.getAttribute('name');
+  const phase=sheetName==='BDD_unificada'?'Fase 2':'Fase 1';
   const rid=sheetNode.getAttribute('r:id') || sheetNode.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id');
   const target=rels.get(rid); if(!target) throw new Error('No se pudo resolver la hoja de datos.');
   const sheetPath=normalizePath('xl',target);
@@ -498,43 +508,75 @@ async function parseXlsx(file){
     out.push(vals);
   }
   if(out.length<2) throw new Error('La hoja no contiene registros.');
-  const headers=out[0].map(v=>strip(v)); const missing=REQUIRED.filter(h=>!headers.includes(h));
+  const headers=out[0].map(v=>{const h=strip(v);return h==='Usuario'?'Usuario Suso':h==='Supervisor'?'Supervisor/a':h;}); const missing=REQUIRED.filter(h=>!headers.includes(h));
   if(missing.length) throw new Error('Faltan columnas requeridas: '+missing.join(', '));
   const positions=Object.fromEntries(REQUIRED.map(h=>[h,headers.indexOf(h)]));
   const rows=[];
   for(let i=1;i<out.length;i++){
     const arr=out[i]; const fol=arr[positions['folio_emp']]; if(fol===undefined || fol===null || strip(fol)==='') continue;
-    const o={}; for(const h of REQUIRED) o[h]=arr[positions[h]]; rows.push(o);
+    const o={__phase:phase}; for(const h of REQUIRED) o[h]=arr[positions[h]]; rows.push(o);
   }
-  return {rows, sheetName};
+  return {rows, sheetName, phase};
 }
 
 // ------------------------------
 // Carga, validación y calidad
 // ------------------------------
-async function handleFile(file){
-  if(!file) return;
-  if(!/\.xlsx$/i.test(file.name)){ showError('Selecciona un archivo .xlsx.'); return; }
+async function handleFiles(files, expectedPhase=''){
+  const list=Array.from(files||[]); if(!list.length)return;
   $('#loading').classList.remove('hidden');
+  const errors=[], staged=new Map(), duplicates=new Set();
   try{
-    const parsed=await parseXlsx(file);
-    state.rawCount=parsed.rows.length;
-    state.modeLabels=buildModeLabels(parsed.rows);
-    state.rows=parsed.rows.map(normalizeRow);
-    state.sourceName=file.name; state.loadedAt=new Date();
-    buildQuality(parsed.rows,state.rows);
-    initFilters();
-    $('#welcome').classList.add('hidden'); $('#dashboard').classList.remove('hidden'); $('#clearBtn').classList.remove('hidden');
-    $('#status').className='statusline ok';
-    $('#status').innerHTML=`<span><b>${escapeHTML(file.name)}</b> · ${fmtInt(state.rows.length)} empresas leídas · hoja ${escapeHTML(parsed.sheetName)}</span><span>Procesamiento local · ${new Intl.DateTimeFormat('es-CL',{hour:'2-digit',minute:'2-digit'}).format(state.loadedAt)}</span>`;
-    render();
-  }catch(err){ console.error(err); showError(err.message||String(err)); }
-  finally{$('#loading').classList.add('hidden');}
+    for(const file of list){
+      try{
+        if(!/\.xlsx$/i.test(file.name))throw new Error('Selecciona archivos .xlsx.');
+        const parsed=await parseXlsx(file);
+        if(expectedPhase && parsed.phase!==expectedPhase)throw new Error(`Este archivo corresponde a ${parsed.phase}; selecciona el de ${expectedPhase}.`);
+        if(staged.has(parsed.phase)){duplicates.add(parsed.phase);throw new Error(`Se seleccionaron dos archivos de ${parsed.phase}. Carga una sola versión de esa fase.`);}
+        staged.set(parsed.phase,{...parsed,name:file.name,loadedAt:new Date()});
+      }catch(err){errors.push(file.name+': '+err.message);}
+    }
+    for(const [phase,source] of staged)if(!duplicates.has(phase))state.sources[phase]=source;
+    refreshSources();
+    $('#loadMessage').className=errors.length?'error':'';
+    $('#loadMessage').textContent=errors.length?errors.join(' · '):'Carga completada. Puedes consultar ambas fases o filtrarlas individualmente.';
+  }finally{$('#loading').classList.add('hidden');}
+}
+function refreshSources(){
+  const sources=Object.values(state.sources), raw=sources.flatMap(s=>s.rows);
+  state.modeLabels=buildModeLabels(raw);state.rows=raw.map(normalizeRow);state.rawCount=raw.length;
+  buildQuality(raw,state.rows);
+  const shared=new Map();for(const r of state.rows){if(!shared.has(r.folio))shared.set(r.folio,new Set());shared.get(r.folio).add(r.phase);}
+  const n=[...shared.values()].filter(s=>s.size>1).length;
+  if(n)state.quality.push({level:'warn',title:'Folios presentes en ambas fases',text:`${n} folios compartidos. Se conserva un registro por fase; el total conjunto no es un conteo de empresas únicas.`});
+  $('#welcome').classList.toggle('hidden',!!sources.length);$('#dashboard').classList.toggle('hidden',!sources.length);$('#clearBtn').classList.toggle('hidden',!sources.length);
+  $('#status').textContent=`${sources.length} de 2 fases cargadas · ${fmtInt(raw.length)} registros · ${fmtInt(shared.size)} folios únicos · ${n} folios compartidos · procesamiento local`;
+  renderSources();initFilters();if(sources.length)render();
+}
+function renderSources(){
+  $('#sourceCards').innerHTML=['Fase 1','Fase 2'].map(phase=>{const s=state.sources[phase];return `<article class="sourcecard ${s?'loaded':''}" data-phase="${phase}"><h3>${phase} <span class="badge">${s?'Cargada':'Sin cargar'}</span></h3><div class="filename">${s?escapeHTML(s.name):'Selecciona o arrastra el Excel de esta fase.'}</div><p>${s?fmtInt(s.rows.length)+' registros · actualizada '+new Intl.DateTimeFormat('es-CL',{hour:'2-digit',minute:'2-digit'}).format(s.loadedAt):phase==='Fase 1'?'Hoja: Empresas_Muestra_ENADEL26':'Hoja: BDD_unificada'}</p><button class="btn" data-load-phase="${phase}">${s?'Actualizar':'Cargar'} ${phase.toLowerCase()}</button>${s?`<button class="btn" data-remove-phase="${phase}">Quitar</button>`:''}</article>`;}).join('');
+  document.querySelectorAll('[data-load-phase]').forEach(b=>b.onclick=()=>chooseFile(b.dataset.loadPhase));
+  document.querySelectorAll('[data-remove-phase]').forEach(b=>b.onclick=()=>{delete state.sources[b.dataset.removePhase];refreshSources();$('#loadMessage').textContent='Fase retirada.';});
+  document.querySelectorAll('.sourcecard').forEach(card=>{card.ondragover=e=>{e.preventDefault();e.stopPropagation();};card.ondrop=e=>{e.preventDefault();e.stopPropagation();handleFiles(e.dataTransfer.files,card.dataset.phase);};});
+}
+function sampleSize(){
+  const phase=$('#fPhase').value;
+  return Object.entries(state.sources).filter(([p])=>!phase||p===phase).reduce((sum,[,s])=>sum+s.rows.length,0);
+}
+function renderPhaseSummary(rows){
+  const body=['Fase 1','Fase 2'].map(phase=>{
+    const a=rows.filter(r=>r.phase===phase),total=state.sources[phase]?.rows.length||0,assigned=a.filter(r=>r.assigned).length,managed=a.filter(r=>r.managed).length;
+    return `<tr><td><button data-view-phase="${phase}">${phase}</button>${state.sources[phase]?'':' · sin cargar'}</td>${[total,assigned,managed,a.filter(r=>r.assigned&&!r.managed).length,a.filter(r=>!r.assigned).length].map(n=>`<td>${fmtInt(n)}</td>`).join('')}<td><b>${fmtPct(total?managed/total*100:NaN)}</b></td><td>${fmtPct(assigned?a.filter(r=>r.managed&&r.assigned).length/assigned*100:NaN)}</td></tr>`;
+  }).join('');
+  $('#phaseSummary').innerHTML=`<div class="tablewrap"><table><thead><tr><th>Fase</th><th>Muestra total</th><th>Asignadas visibles</th><th>Gestionadas visibles</th><th>Pendientes visibles</th><th>Sin asignar visibles</th><th>Avance de muestra</th><th>Sobre asignadas</th></tr></thead><tbody>${body}</tbody></table></div><p>Los filtros cambian las gestiones visibles; la muestra total de cada fase permanece como denominador. Haz clic en una fase para consultarla.</p>`;
+  document.querySelectorAll('[data-view-phase]').forEach(b=>b.onclick=()=>{if(state.sources[b.dataset.viewPhase])setDashboardFilter('fPhase',b.dataset.viewPhase);});
 }
 function buildQuality(raw,norm){
   const q=[];
-  const duplicateFolios=norm.length-new Set(norm.map(r=>r.folio)).size;
+  const duplicateFolios=norm.length-new Set(norm.map(r=>r.phase+'|'+r.folio)).size;
   if(duplicateFolios>0) q.push({level:'error',title:'Folios duplicados',text:`Se detectaron ${duplicateFolios} registros con folios repetidos.`});
+  const orphan=norm.filter(r=>r.managed&&!r.assigned).length;
+  if(orphan)q.push({level:'warn',title:'Gestiones sin encuestador/a',text:`${orphan} registros con gestión válida sin asignación. Aparecen en gestionadas, pero se excluyen del numerador de avance.`});
   const extraModes=norm.filter(r=>validMode(r.mode) && !KNOWN_MODES.includes(r.mode));
   if(extraModes.length) q.push({level:'warn',title:'Modalidades adicionales contabilizadas',text:`${extraModes.length} registro(s) en ${[...new Set(extraModes.map(r=>r.mode))].join(', ')}. Se contabilizan si tienen fecha válida; conviene confirmar que sean vías de contacto.`});
   const adminModes=norm.filter(r=>isAdministrativeMode(r.mode));
@@ -562,6 +604,7 @@ function showError(msg){
 // Filtros dinámicos y encadenados
 // ------------------------------
 const FILTERS = [
+  {id:'fPhase',field:'phase',all:'Ambas fases',label:'Fase'},
   {id:'fSupervisor', field:'supervisor', all:'Todos', label:'Supervisor'},
   {id:'fEncuestador', field:'verifier', all:'Todos', label:'Encuestador'},
   {id:'fSector', field:'sector', all:'Todos', label:'Sector'},
@@ -617,8 +660,9 @@ function render(){
 }
 function renderKpis(rows){
   const total=rows.length, assigned=rows.filter(r=>r.assigned).length, managed=rows.filter(r=>r.managed).length;
-  const pending=rows.filter(r=>r.assigned&&!r.managed).length, unassigned=rows.filter(r=>!r.assigned).length, progress=assigned?managed/assigned*100:NaN;
+  const pending=rows.filter(r=>r.assigned&&!r.managed).length, unassigned=rows.filter(r=>!r.assigned).length, progress=sampleSize()?managed/sampleSize()*100:NaN;
   $('#kTotal').textContent=fmtInt(total); $('#kAssigned').textContent=fmtInt(assigned); $('#kManaged').textContent=fmtInt(managed); $('#kPending').textContent=fmtInt(pending); $('#kUnassigned').textContent=fmtInt(unassigned); $('#kProgress').textContent=fmtPct(progress);
+  $('#sampleProgressSub').textContent=`${fmtInt(managed)} / ${fmtInt(sampleSize())} muestra · sobre asignadas: ${fmtPct(assigned?rows.filter(r=>r.managed&&r.assigned).length/assigned*100:NaN)}`;
   const global=rows.length===state.rows.length; $('#kTotalSub').textContent=global?'muestra total':'muestra filtrada'; $('#kAssignedSub').textContent=global?'con encuestador/a':'en selección actual';
 }
 function renderModes(rows){
@@ -724,7 +768,7 @@ function decisionPersonCard(x,type,reasons,priority){
   const reasonCls=type==='alert'?(priority==='Alta'?'red':'amber'):'green';
   return `<div class="personcard ${cls}" data-decision-verifier="${escapeHTML(x.name)}">
     <div class="personhead"><div><div class="personname">${escapeHTML(x.name)}</div><div class="personsup">${escapeHTML(x.supervisor||'Sin supervisor')}</div></div><span class="priority ${pcls}">${type==='alert'?'Prioridad '+priority:'Destacado'}</span></div>
-    <div class="personmetrics"><div class="pm"><b>${fmtInt(x.managed)}</b><span>Gestiones</span></div><div class="pm"><b>${fmtPct(x.progress)}</b><span>Avance</span></div><div class="pm"><b>${fmtInt(x.pending)}</b><span>Pendientes</span></div><div class="pm"><b>${fmtInt(x.recent)}</b><span>Últ. 7 días</span></div></div>
+    <div class="personmetrics"><div class="pm"><b>${fmtInt(x.managed)}</b><span>Gestiones</span></div><div class="pm"><b>${fmtPct(x.progress)}</b><span>Sobre asignadas</span></div><div class="pm"><b>${fmtInt(x.pending)}</b><span>Pendientes</span></div><div class="pm"><b>${fmtInt(x.recent)}</b><span>Últ. 7 días</span></div></div>
     <div class="reasons">${reasons.map(r=>`<span class="reason ${reasonCls}">${escapeHTML(r)}</span>`).join('')}</div>
     <button class="contactbtn" type="button">Ver detalle y preparar contacto</button>
   </div>`;
@@ -837,7 +881,7 @@ function renderCompanies(rows){
   if(q) arr=arr.filter(r=>[r.folio,r.sector,r.comuna,r.verifier,r.supervisor,r.rawMode,r.status].some(v=>fold(v).includes(q)));
   arr=arr.slice().sort((a,b)=>{const da=a.date?a.date.getTime():0,db=b.date?b.date.getTime():0;return db-da||a.folio.localeCompare(b.folio)});
   const limit=700, shown=arr.slice(0,limit);
-  $('#companyBody').innerHTML=shown.map(r=>`<tr><td><b>${escapeHTML(r.folio)}</b></td><td title="${escapeHTML(r.sector)}">${escapeHTML(r.sector)}</td><td>${escapeHTML(r.comuna)}</td><td>${escapeHTML(r.verifier||'—')}</td><td>${escapeHTML(r.supervisor||'—')}</td><td>${modePill(r)}</td><td>${displayDate(r.date)}</td><td>${statusPill(r.status)}</td></tr>`).join('') || '<tr><td colspan="8" class="muted">Sin resultados.</td></tr>';
+  $('#companyBody').innerHTML=shown.map(r=>`<tr><td>${escapeHTML(r.phase)}</td><td><b>${escapeHTML(r.folio)}</b></td><td title="${escapeHTML(r.sector)}">${escapeHTML(r.sector)}</td><td>${escapeHTML(r.comuna)}</td><td>${escapeHTML(r.verifier||'—')}</td><td>${escapeHTML(r.supervisor||'—')}</td><td>${modePill(r)}</td><td>${displayDate(r.date)}</td><td>${statusPill(r.status)}</td></tr>`).join('') || '<tr><td colspan="8" class="muted">Sin resultados.</td></tr>';
   if(arr.length>limit) $('#companyBody').insertAdjacentHTML('beforeend',`<tr><td colspan="8" class="muted">Mostrando ${fmtInt(limit)} de ${fmtInt(arr.length)} registros. Usa filtros o búsqueda para acotar.</td></tr>`);
 }
 function modePill(r){
@@ -856,11 +900,17 @@ FILTERS.forEach(f=>$('#'+f.id).addEventListener('change',()=>{updateFilterOption
 $('#rankMetric').addEventListener('change',()=>renderRanking(filteredRows()));
 $('#companySearch').addEventListener('input',()=>renderCompanies(filteredRows()));
 $('#resetFilters').addEventListener('click',()=>{FILTERS.forEach(f=>$('#'+f.id).value='');$('#companySearch').value='';updateFilterOptions();render();});
-function chooseFile(){ $('#fileInput').value=''; $('#fileInput').click(); }
-$('#loadBtn').addEventListener('click',chooseFile); $('#welcomeLoad').addEventListener('click',chooseFile); $('#fileInput').addEventListener('change',e=>handleFile(e.target.files[0]));
-$('#clearBtn').addEventListener('click',()=>{state.rows=[];$('#dashboard').classList.add('hidden');$('#welcome').classList.remove('hidden');$('#clearBtn').classList.add('hidden');document.querySelector('#welcome .errorbox')?.remove();});
-const dz=$('#welcome'); ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag')})); ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag')})); dz.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
-window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>{if(!dz.contains(e.target))e.preventDefault()});
+let requestedPhase='';
+function chooseFile(phase=''){requestedPhase=typeof phase==='string'?phase:'';$('#fileInput').value='';$('#fileInput').click();}
+$('#loadBtn').addEventListener('click',()=>chooseFile());$('#welcomeLoad').addEventListener('click',()=>chooseFile());
+$('#fileInput').addEventListener('change',e=>handleFiles(e.target.files,requestedPhase));
+$('#clearBtn').addEventListener('click',()=>{state.sources={};refreshSources();$('#loadMessage').textContent='Archivos retirados.';});
+for(const dz of [$('#welcome'),$('.sourcepanel')]){
+  for(const ev of ['dragenter','dragover'])dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');});
+  for(const ev of ['dragleave','drop'])dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');});
+  dz.addEventListener('drop',e=>{e.stopPropagation();handleFiles(e.dataTransfer.files);});
+}
+window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>e.preventDefault());
 // ------------------------------
 // Simplified visual proposal
 // ------------------------------
@@ -925,7 +975,7 @@ function renderVerifierHeatmap(rows){
       countMap.set(x.name+'|'+d,c); max=Math.max(max,c);
     }
   }
-  const header=viewDates.map(d=>`<th>${escapeHTML(d.slice(5).split('-').reverse().join('/'))}</th>`).join('') + '<th>Avance</th><th>Pend.</th>';
+  const header=viewDates.map(d=>`<th>${escapeHTML(d.slice(5).split('-').reverse().join('/'))}</th>`).join('') + '<th>Sobre asignadas</th><th>Pend.</th>';
   const body=stats.map(x=>{
     const cells=viewDates.map(d=>{ const c=countMap.get(x.name+'|'+d)||0; const bg=heatBg(c,max,'blue'); const color=heatText(c,max); return `<td><div class="heatcell ${c===0?'zero':''}" style="background:${bg};color:${c===0?'#8a95a8':color}">${c||''}</div></td>`; }).join('');
     return `<tr><td><div class="heatRowLabel" data-heat-verifier="${escapeHTML(x.name)}"><div><b>${escapeHTML(x.name)}</b><span>${escapeHTML(x.supervisor||'Sin supervisor')}</span></div><span>${fmtInt(x.assigned)} asig.</span></div></td>${cells}<td><span class="metricPill ${x.progress>=40?'good':x.progress>=20?'mid':'warn'}">${fmtPct(x.progress)}</span></td><td><span class="metricPill ${x.pending>=20?'warn':'mid'}">${fmtInt(x.pending)}</span></td></tr>`;
@@ -937,12 +987,12 @@ function renderComunaHeatmap(rows){
   const box=$('#comunaHeatmap');
   const map=new Map();
   for(const r of rows){ const k=r.comuna||'Sin comuna'; if(!map.has(k)) map.set(k,[]); map.get(k).push(r); }
-  const arr=[...map].map(([name,a])=>{ const assigned=a.filter(r=>r.assigned).length, managed=a.filter(r=>r.managed).length, pending=Math.max(0,assigned-managed), unassigned=a.length-assigned, progress=assigned?managed/assigned*100:0; return {name,total:a.length,assigned,managed,pending,unassigned,progress}; }).sort((a,b)=>b.total-a.total).slice(0,10);
+  const arr=[...map].map(([name,a])=>{ const assigned=a.filter(r=>r.assigned).length, managed=a.filter(r=>r.managed).length, pending=Math.max(0,assigned-managed), unassigned=a.length-assigned, progress=assigned?managed/assigned*100:0; return {name,total:a.length,assigned,managed,pending,unassigned,progress}; }).sort((a,b)=>b.total-a.total);
   $('#heatComunaBadge').textContent=arr.length?`${fmtInt(arr.length)} comunas`:'Sin datos';
   if(!arr.length){ box.innerHTML='<div class="muted" style="padding:14px">Sin comunas visibles con los filtros actuales.</div>'; return; }
   const maxTotal=Math.max(...arr.map(x=>x.total),1), maxManaged=Math.max(...arr.map(x=>x.managed),1), maxPending=Math.max(...arr.map(x=>x.pending),1), maxUnassigned=Math.max(...arr.map(x=>x.unassigned),1);
   const body=arr.map(x=>`<tr><td><div class="heatRowLabel" data-heat-comuna="${escapeHTML(x.name)}"><div><b>${escapeHTML(x.name)}</b><span>${fmtInt(x.total)} empresas</span></div><span></span></div></td><td><div class="heatcell" style="background:${heatBg(x.total,maxTotal,'blue')};color:${heatText(x.total,maxTotal)}">${fmtInt(x.total)}</div></td><td><div class="heatcell" style="background:${heatBg(x.managed,maxManaged,'green')};color:${heatText(x.managed,maxManaged)}">${fmtInt(x.managed)}</div></td><td><div class="heatcell ${x.pending===0?'zero':''}" style="background:${heatBg(x.pending,maxPending,'amber')};color:${x.pending===0?'#8a95a8':heatText(x.pending,maxPending)}">${fmtInt(x.pending)}</div></td><td><div class="heatcell ${x.unassigned===0?'zero':''}" style="background:${heatBg(x.unassigned,maxUnassigned,'blue')};color:${x.unassigned===0?'#8a95a8':heatText(x.unassigned,maxUnassigned)}">${fmtInt(x.unassigned)}</div></td><td><span class="metricPill ${x.progress>=40?'good':x.progress>=20?'mid':'warn'}">${fmtPct(x.progress)}</span></td></tr>`).join('');
-  box.innerHTML=`<table class="heatTable"><thead><tr><th>Comuna</th><th>Empresas</th><th>Gestionadas</th><th>Pendientes</th><th>Sin asignar</th><th>Avance</th></tr></thead><tbody>${body}</tbody></table>`;
+  box.innerHTML=`<table class="heatTable"><thead><tr><th>Comuna</th><th>Empresas</th><th>Gestionadas</th><th>Pendientes</th><th>Sin asignar</th><th>Sobre asignadas</th></tr></thead><tbody>${body}</tbody></table>`;
   box.querySelectorAll('[data-heat-comuna]').forEach(el=>el.addEventListener('click',()=>setDashboardFilter('fComuna',el.dataset.heatComuna)));
 }
 function renderQuickSupervisorCards(rows){
@@ -982,23 +1032,24 @@ function renderVerifierDetail(rows){
     const rowsHtml=g.a.slice().sort((a,b)=>{
       const da=a.date?a.date.getTime():0, db=b.date?b.date.getTime():0;
       return db-da || String(a.folio).localeCompare(String(b.folio),'es');
-    }).map(r=>`<tr><td><b>${escapeHTML(r.folio)}</b></td><td>${escapeHTML(r.sector||'—')}</td><td>${escapeHTML(r.comuna||'—')}</td><td>${modePill(r)}</td><td>${r.date?displayDate(r.date):'—'}</td><td>${statusPill(r.status)}</td></tr>`).join('');
+    }).map(r=>`<tr><td>${escapeHTML(r.phase)}</td><td><b>${escapeHTML(r.folio)}</b></td><td>${escapeHTML(r.sector||'—')}</td><td>${escapeHTML(r.comuna||'—')}</td><td>${modePill(r)}</td><td>${r.date?displayDate(r.date):'—'}</td><td>${statusPill(r.status)}</td></tr>`).join('');
     return `<details class="verifierGroup" ${i===0?'open':''}>
       <summary>
         <div><div class="vgName">${escapeHTML(g.name)}</div><div class="vgSup">${escapeHTML(g.supervisor|| (g.name==='Sin asignar'?'Sin supervisor':'Supervisor no informado'))}</div></div>
         <div class="vgMetric"><b>${fmtInt(g.assigned)}</b><span>Asignadas</span></div>
         <div class="vgMetric"><b>${fmtInt(g.managed)}</b><span>Gestionadas</span></div>
         <div class="vgMetric"><b>${fmtInt(g.pending)}</b><span>Pendientes</span></div>
-        <div class="vgMetric"><b>${g.name==='Sin asignar'?'—':fmtPct(g.progress)}</b><span>Avance</span></div>
+        <div class="vgMetric"><b>${g.name==='Sin asignar'?'—':fmtPct(g.progress)}</b><span>Sobre asignadas</span></div>
         <div class="vgOpen">Ver empresas ▾</div>
       </summary>
-      <div class="vgTableWrap"><table class="vgTable"><thead><tr><th>Folio</th><th>Sector</th><th>Comuna</th><th>Modalidad</th><th>Fecha</th><th>Estado</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
+      <div class="vgTableWrap"><table class="vgTable"><thead><tr><th>Fase</th><th>Folio</th><th>Sector</th><th>Comuna</th><th>Modalidad</th><th>Fecha</th><th>Estado</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>
     </details>`;
   }).join('');
 }
 render = function(){
   const rows=filteredRows();
   renderFilterMeta();
+  renderPhaseSummary(applyFilters(state.rows,'fPhase'));
   renderKpis(rows);
   renderTimeline(rows);
   renderModes(rows);
@@ -1013,6 +1064,7 @@ render = function(){
 }
 
 
+renderSources();
 $('#detailSearch')?.addEventListener('input',()=>renderVerifierDetail(filteredRows()));
 $('#detailStatus')?.addEventListener('change',()=>renderVerifierDetail(filteredRows()));
 </script>
